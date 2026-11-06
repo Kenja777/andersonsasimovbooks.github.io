@@ -1,57 +1,25 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Andersons Asimov Books — Batch 6</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch 6 — Anderson's Asimov Books</title>
 <style>
-body{font:17px Arial,sans-serif;max-width:1100px;margin:30px auto;padding:0 16px;color:#222;line-height:1.5}a{color:#0759a7}header{padding-bottom:12px;border-bottom:1px solid #ddd}.books{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}.book{border:1px solid #ddd;border-radius:8px;padding:12px}.book img{width:100%;height:220px;object-fit:contain;background:#f4f4f4}.book h2{font-size:19px}.photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}.photos img{width:100%;height:330px;object-fit:contain}.photos a{display:block;border:1px solid #ddd;padding:8px;text-align:center}.gallery{padding-top:18px;margin-top:35px;border-top:2px solid #ddd;scroll-margin-top:20px}.gallery h2{margin-bottom:6px}small{color:#666}.top{display:inline-block;margin-top:12px}
-</style>
-</head>
-<body>
-<header><a href="index.html">← Main book catalog</a></header>
-<main id="top"><h1>Batch 6 — Book Photo Galleries</h1><p id="status">Loading book photographs…</p><div class="books" id="books"></div><div id="galleries"></div></main>
+:root{font-family:Arial,Helvetica,sans-serif;color:#253044;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}header{background:#182c4a;color:white;padding:28px max(20px,calc((100vw - 1100px)/2))}header h1{margin:0 0 6px;font-size:2rem}header p{margin:0;color:#d8e3f3}main{max-width:1100px;margin:auto;padding:24px 16px 70px}a{color:#1958a7}.back{color:#f3f8ff;display:inline-block;margin-bottom:15px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:22px}input{font-size:16px;padding:11px 13px;border:1px solid #b5c0d2;border-radius:8px;max-width:100%;width:320px}.count{color:#536176}.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:19px}.book{background:white;border:1px solid #dce3ed;border-radius:12px;overflow:hidden;box-shadow:0 2px 7px #17233e0b}.hero{width:100%;height:245px;object-fit:contain;background:#edf1f7;cursor:pointer}.info{padding:15px}.info h2{font-size:1.08rem;margin:0 0 9px;line-height:1.35}.photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.photos button{padding:0;border:2px solid transparent;border-radius:5px;background:#eee;cursor:pointer}.photos button:focus-visible{outline:3px solid #2368ac}.photos img{display:block;width:45px;height:58px;object-fit:cover}.photos button.active{border-color:#1b5ea9}.meta{font-size:.9rem;color:#607086}.empty{padding:25px;background:white;border-radius:10px}footer{text-align:center;color:#667;padding:24px}dialog{border:0;border-radius:12px;max-width:95vw;max-height:95vh;padding:10px;background:#fff}dialog img{display:block;max-width:90vw;max-height:80vh;object-fit:contain}dialog .actions{display:flex;justify-content:space-between;gap:10px;padding:9px 4px}button{font:inherit}dialog button{padding:6px 12px;cursor:pointer}@media(max-width:450px){.hero{height:220px}header h1{font-size:1.5rem}}
+</style></head>
+<body><header><a class="back" href="index.html">← Back to book catalog</a><h1>Batch 6 — Book Photographs</h1><p>Anderson's Asimov Books · 29 books · 154 photographs</p></header>
+<main><div class="toolbar"><input id="search" type="search" placeholder="Search for a book title" aria-label="Search book titles"><span class="count" id="count"></span></div><div id="books" class="books"></div></main>
+<dialog id="viewer"><div class="actions"><button id="prev">← Previous</button><button id="close">Close ✕</button><button id="next">Next →</button></div><img id="large" alt="Enlarged book photograph"><div id="caption" class="meta"></div></dialog>
+<footer>Anderson's Asimov Books · Batch 6</footer>
 <script>
-// Batch 6 folders are stored directly at the repository root.
-// GitHub's public tree listing supplies the exact paths and JPG filenames.
-const owner='Kenja777', repo='andersonsasimovbooks.github.io';
-const ignore=new Set(['ABCs of Ecology','batch4-photos','batch5-photos','books']);
-const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
-const isPhoto=p=>/\.(jpe?g|png|webp|gif)$/i.test(p);
-const base=`https://raw.githubusercontent.com/${owner}/${repo}/main/`;
-const booksEl=document.getElementById('books');
-const galleriesEl=document.getElementById('galleries');
-const statusEl=document.getElementById('status');
-function element(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
-(async()=>{
-try{
- const response=await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`,{headers:{'Accept':'application/vnd.github+json'}});
- if(!response.ok)throw new Error(`GitHub returned HTTP ${response.status}. Refresh later if its public API limit has been reached.`);
- const result=await response.json();
- if(result.truncated)throw new Error('GitHub returned an incomplete file listing.');
- const photos=new Map();
- for(const f of result.tree||[]){
-  if(f.type!=='blob'||!isPhoto(f.path))continue;
-  const parts=f.path.split('/');
-  if(parts.length!==2||ignore.has(parts[0]))continue;
-  if(!photos.has(parts[0]))photos.set(parts[0],[]);
-  photos.get(parts[0]).push(f.path);
- }
- const names=Array.from(photos.keys()).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
- let count=0;
- names.forEach((name,i)=>{
-  const paths=photos.get(name).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));count+=paths.length;
-  const anchor=`book-${i+1}`;
-  const card=element('article','book');const cardLink=element('a');cardLink.href='#'+anchor;
-  const cover=document.createElement('img');cover.loading='lazy';cover.src=base+encPath(paths[0]);cover.alt=name;
-  cardLink.append(cover,element('h2','',name));card.append(cardLink,element('small','',`${paths.length} photograph${paths.length===1?'':'s'}`));booksEl.append(card);
-  const section=element('section','gallery');section.id=anchor;section.append(element('h2','',name),element('small','',`${paths.length} photographs — click a picture for the original full-size image`));
-  const grid=element('div','photos');
-  paths.forEach(path=>{const url=base+encPath(path);const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';const im=document.createElement('img');im.loading='lazy';im.src=url;im.alt=`${name}: ${path.split('/').pop()}`;a.append(im);grid.append(a)});
-  section.append(grid);const top=element('a','top','↑ Back to list of books');top.href='#top';section.append(top);galleriesEl.append(section);
- });
- statusEl.textContent=`${names.length} books · ${count} photographs`;
- if(!names.length)statusEl.textContent='No Batch 6 photos found. Check that the book folders contain JPG images in the repository root.';
-}catch(err){statusEl.textContent=`Unable to load gallery: ${err.message}`;}
-})();
-</script>
-</body></html>
+// Fixed inventory made from the original Git Hub Batch 6.zip. No live repository-wide scan.
+const inventory=[{"title": "100 Malicious Litte Mysteries", "folder": "100 Malicious Litte Mysteries", "photos": ["3-4 Cover.jpg", "IMG_7098.jpg", "IMG_7099.jpg", "IMG_7100.jpg", "IMG_7101.jpg", "IMG_7102.jpg"]}, {"title": "1001 Ways To Be Romantic", "folder": "1001 Ways To Be Romantic", "photos": ["IMG_6911.jpg", "IMG_6913.jpg", "IMG_6914.jpg", "IMG_6915.jpg", "IMG_6917.jpg"]}, {"title": "Asimov on Science A 30 Year", "folder": "Asimov on Science A 30 Year", "photos": ["IMG_7273.jpg", "IMG_7274.jpg", "IMG_7275.jpg", "IMG_7276.jpg", "IMG_7277.jpg", "IMG_7278.jpg"]}, {"title": "Asimov the Unauthorized Life", "folder": "Asimov the Unauthorized Life", "photos": ["3-4 Cover.jpg", "Copyright.jpg", "IMG_7140.jpg", "IMG_7141.jpg", "IMG_7142.jpg", "IMG_7143.jpg", "IMG_7145.jpg"]}, {"title": "Asimovs Sherlockian Limericks", "folder": "Asimovs Sherlockian Limericks", "photos": ["68-of-250 Limericks.jpg", "IMG_7238.jpg", "IMG_7239.jpg", "IMG_7240.jpg", "IMG_7241.jpg", "IMG_7242.jpg", "IMG_7243.jpg", "IMG_7244.jpg", "IMG_7245.jpg"]}, {"title": "Azazel", "folder": "Azazel", "photos": ["IMG_9151.jpg", "IMG_9152.jpg", "IMG_9153.jpg"]}, {"title": "Bottom Line", "folder": "Bottom Line", "photos": ["IMG_7068.jpg", "IMG_7069.jpg", "IMG_7070.jpg", "IMG_7071.jpg"]}, {"title": "Collapsing Universe", "folder": "Collapsing Universe", "photos": ["IMG_7210.jpg", "IMG_7212.jpg", "IMG_7213.jpg", "IMG_7215.jpg", "IMG_7220.jpg", "IMG_7221.jpg", "IMG_7223.jpg", "Signature.jpg"]}, {"title": "Hidden Fortunes", "folder": "Hidden Fortunes", "photos": ["IMG_7045.jpg", "IMG_7046.jpg", "IMG_7047.jpg", "IMG_7048.jpg", "IMG_7049.jpg"]}, {"title": "Isaac Asimove Presents Best Crime Stories 19th Century", "folder": "Isaac Asimove Presents Best Crime Stories 19th Century", "photos": ["IMG_7146.jpg", "IMG_7147.jpg", "IMG_7148.jpg", "IMG_7149.jpg", "IMG_7150.jpg", "IMG_7151.jpg"]}, {"title": "Magnificent Brain", "folder": "Magnificent Brain", "photos": ["IMG_6930.jpg", "IMG_6931.jpg", "IMG_6932.jpg", "IMG_6933.jpg"]}, {"title": "Mutants", "folder": "Mutants", "photos": ["3-4 cover.jpg", "IMG_7283.jpg", "IMG_7284.jpg", "IMG_7285.jpg", "IMG_7286.jpg"]}, {"title": "New Hugo Winners Vol 1 Wynwood Press 1989", "folder": "New Hugo Winners Vol 1 Wynwood Press 1989", "photos": ["IMG_7130.jpg", "IMG_7131.jpg", "IMG_7132.jpg", "IMG_7133.jpg", "IMG_7134.jpg", "IMG_7135.jpg"]}, {"title": "New Hugo Winners Vol II Baen 1991", "folder": "New Hugo Winners Vol II Baen 1991", "photos": ["3-4 Cover.jpg", "IMG_7094.jpg", "IMG_7095.jpg", "IMG_7096.jpg", "IMG_7097.jpg"]}, {"title": "NightFall", "folder": "NightFall", "photos": ["296 of 750 signed Silverberg Asimov.jpg", "IMG_4484.jpg", "IMG_7246.jpg", "IMG_7247.jpg", "IMG_7249.jpg", "IMG_7250.jpg"]}, {"title": "Peerage 6 Books by Asimov", "folder": "Peerage 6 Books by Asimov", "photos": ["Copyright.jpg", "IMG_7136.jpg", "IMG_7137.jpg", "IMG_7139.jpg", "spine.jpg"]}, {"title": "Romance of Country Inns", "folder": "Romance of Country Inns", "photos": ["IMG_6771.jpg", "IMG_6772.jpg", "IMG_6774.jpg", "IMG_6775.jpg", "IMG_6776.jpg", "IMG_6777.jpg"]}, {"title": "Space Mail paperback", "folder": "Space Mail paperback", "photos": ["IMG_7263.jpg", "IMG_7264.jpg", "IMG_7270.jpg", "IMG_7271.jpg", "IMG_7272.jpg"]}, {"title": "Stories We Need to Know", "folder": "Stories We Need to Know", "photos": ["IMG_6907.jpg", "IMG_6908.jpg", "IMG_6909.jpg", "IMG_6910.jpg"]}, {"title": "The 13 Crimes of SF", "folder": "The 13 Crimes of SF", "photos": ["IMG_7088.jpg", "IMG_7089.jpg", "IMG_7090.jpg", "IMG_7091.jpg"]}, {"title": "The Future in Question", "folder": "The Future in Question", "photos": ["IMG_7307.jpg", "IMG_7308.jpg", "IMG_7309.jpg", "IMG_7710.jpg"]}, {"title": "The Hugo Winners Vol 4", "folder": "The Hugo Winners Vol 4", "photos": ["3-4 cover.jpg", "IMG_7117.jpg", "IMG_7118.jpg", "IMG_7120.jpg", "IMG_7121.jpg", "IMG_7122.jpg", "IMG_7128.jpg"]}, {"title": "The Hugo Winners Vol 5", "folder": "The Hugo Winners Vol 5", "photos": ["3-4 cover.jpg", "IMG_7117.jpg", "IMG_7118.jpg", "IMG_7120.jpg", "IMG_7121.jpg", "IMG_7122.jpg"]}, {"title": "The Hugo Winners Volume 3", "folder": "The Hugo Winners Volume 3", "photos": ["IMG_7112.jpg", "IMG_7113.jpg", "IMG_7114.jpg", "IMG_7115.jpg", "IMG_7116.jpg"]}, {"title": "The Nude in Photography", "folder": "The Nude in Photography", "photos": ["The Nude.jpg"]}, {"title": "The Sport of Crime Barnes", "folder": "The Sport of Crime Barnes", "photos": ["3-4 cover.jpg", "IMG_7103.jpg", "IMG_7104.jpg", "IMG_7105.jpg", "IMG_7106.jpg"]}, {"title": "The Verse Beside the Road", "folder": "The Verse Beside the Road", "photos": ["IMG_7036.jpg", "IMG_7037.jpg", "IMG_7038.jpg", "IMG_7040.jpg", "IMG_7044.jpg"]}, {"title": "The Wall Chart of World History", "folder": "The Wall Chart of World History", "photos": ["IMG_7159 (1).jpg", "IMG_7160 (1).jpg", "IMG_7161.jpg", "IMG_7162.jpg", "IMG_7163 (1).jpg", "IMG_7164.jpg"]}, {"title": "Who Done It", "folder": "Who Done It", "photos": ["3-4 cover.gif", "IMG_7107.jpg", "IMG_7108.jpg", "IMG_7109.jpg", "IMG_7110.jpg", "IMG_7111.jpg"]}];
+const base='https://raw.githubusercontent.com/Kenja777/andersonsasimovbooks.github.io/main/';
+const fileUrl=(book,file)=>base+encodeURIComponent(book.folder)+'/'+encodeURIComponent(file);
+const container=document.getElementById('books'),search=document.getElementById('search');
+const dialog=document.getElementById('viewer'),large=document.getElementById('large'),caption=document.getElementById('caption');
+let activeBook=null,activeIndex=0;
+function showLarge(book,index){activeBook=book;activeIndex=(index+book.photos.length)%book.photos.length;large.src=fileUrl(book,book.photos[activeIndex]);large.alt=book.title+' — photograph '+(activeIndex+1);caption.textContent=book.title+' · Photograph '+(activeIndex+1)+' of '+book.photos.length;if(!dialog.open)dialog.showModal()}
+document.getElementById('close').onclick=()=>dialog.close();document.getElementById('prev').onclick=()=>showLarge(activeBook,activeIndex-1);document.getElementById('next').onclick=()=>showLarge(activeBook,activeIndex+1);
+dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});document.addEventListener('keydown',e=>{if(!dialog.open)return;if(e.key==='ArrowRight')showLarge(activeBook,activeIndex+1);if(e.key==='ArrowLeft')showLarge(activeBook,activeIndex-1)});
+function render(){const q=search.value.trim().toLowerCase();const found=inventory.filter(b=>b.title.toLowerCase().includes(q));container.replaceChildren();document.getElementById('count').textContent=found.length+' of '+inventory.length+' books';if(!found.length){const p=document.createElement('p');p.className='empty';p.textContent='No matching books found.';container.append(p)}
+found.forEach(book=>{const card=document.createElement('article');card.className='book';const hero=document.createElement('img');hero.className='hero';hero.loading='lazy';hero.src=fileUrl(book,book.photos[0]);hero.alt=book.title+' book photo';hero.onclick=()=>showLarge(book,0);card.append(hero);const info=document.createElement('div');info.className='info';const title=document.createElement('h2');title.textContent=book.title;info.append(title);const meta=document.createElement('div');meta.className='meta';meta.textContent=book.photos.length+' photographs · Click to enlarge';info.append(meta);const thumbs=document.createElement('div');thumbs.className='photos';book.photos.forEach((file,i)=>{const b=document.createElement('button');b.type='button';b.title='Show photograph '+(i+1);if(i===0)b.className='active';const thumb=document.createElement('img');thumb.loading='lazy';thumb.src=fileUrl(book,file);thumb.alt='Photo '+(i+1);b.append(thumb);b.onclick=()=>{hero.src=fileUrl(book,file);thumbs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active')};b.ondblclick=()=>showLarge(book,i);thumbs.append(b)});info.append(thumbs);card.append(info);container.append(card)})}
+search.addEventListener('input',render);render();
+</script></body></html>
