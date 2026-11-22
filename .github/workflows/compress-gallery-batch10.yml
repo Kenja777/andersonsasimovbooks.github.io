@@ -42,5 +42,6 @@ jobs:
             echo "No image changes to commit."
           else
             git commit -m "Compress active Batch 10 gallery images"
+            git pull --rebase origin main
             git push
           fi
