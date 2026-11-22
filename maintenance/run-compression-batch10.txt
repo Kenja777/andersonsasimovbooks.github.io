@@ -1,0 +1,1 @@
+Run Batch 10 compression test.
