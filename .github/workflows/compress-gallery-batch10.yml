@@ -1,0 +1,46 @@
+name: Compress Gallery Images - Batch 10
+
+on:
+  push:
+    paths:
+      - 'maintenance/run-compression-batch10.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pillow
+        run: pip install pillow
+
+      - name: Compress referenced Batch 10 JPEGs
+        env:
+          BATCH_FILTER: Batch 10
+          MAX_DIM: '1800'
+          JPEG_QUALITY: '80'
+          MIN_BYTES: '409600'
+        run: python maintenance/compress_gallery_images.py
+
+      - name: Commit compressed images
+        run: |
+          git config user.name "Kenja777"
+          git config user.email "150557809+Kenja777@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No image changes to commit."
+          else
+            git commit -m "Compress active Batch 10 gallery images"
+            git push
+          fi
